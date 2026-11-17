@@ -1,0 +1,19 @@
+# 本地运行产物
+logs/
+*.log
+bin/
+obj/
+dist/
+*.zip
+
+# 个人数据与凭据：切勿提交
+*.json.bak
+.env
+*.token
+paperlab.aikey*
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

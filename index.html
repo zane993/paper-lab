@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>善驮论文工坊 · 从选题到成稿</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="appbar">
+    <div class="brand">
+      <span class="brand-mark">论</span>
+      <span class="brand-text">
+        <strong>善驮论文工坊</strong>
+        <em>写作与检查框架 · 本地运行</em>
+      </span>
+    </div>
+
+    <div class="appbar-project" id="appbarProject"></div>
+
+    <div class="appbar-actions">
+      <span class="save-state" id="saveState"><i></i>已保存</span>
+      <button class="btn btn-ghost btn-sm" data-nav="flow">流程与接口</button>
+      <button class="btn btn-ghost btn-sm" id="btnHelp">快捷键</button>
+      <button class="btn btn-primary btn-sm" data-nav="export">导出成稿</button>
+    </div>
+  </header>
+
+  <div class="stepper" id="stepper" aria-label="写作流程"></div>
+
+  <div class="shell">
+    <nav class="sidebar" id="sidebar" aria-label="模块导航"></nav>
+    <main class="main" id="view" tabindex="-1"></main>
+  </div>
+
+  <footer class="appfoot">
+    <span>本地运行 · 正文数据仅存本机 · 仅在 AI 模块按你的配置访问模型接口</span>
+    <span class="dot">·</span>
+    <span>质量检查为规则自查，不等于官方查重</span>
+    <span class="dot">·</span>
+    <span id="appVersion">v0.2.0 试用版（含 AI 协作）</span>
+  </footer>
+</div>
+
+<div class="modal-root" id="modalRoot"></div>
+<div class="toast-root" id="toastRoot"></div>
+<div class="print-root" id="printRoot"></div>
+
+<script src="js/data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/check.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/views-setup.js"></script>
+<script src="js/views-draft.js"></script>
+<script src="js/views-final.js"></script>
+<script src="js/views-ai.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

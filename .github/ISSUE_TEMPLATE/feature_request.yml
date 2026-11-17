@@ -1,0 +1,56 @@
+name: 功能建议
+description: 想要的新模块、新能力或体验改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        这个工具刻意保持「零依赖、纯本地」。建议若需要引入外部服务或打包体积，请说明必要性。
+  - type: dropdown
+    id: area
+    attributes:
+      label: 相关模块
+      options:
+        - 项目总览 / 数据备份
+        - 选题
+        - 资料库
+        - 提纲
+        - 正文写作
+        - 引用与参考文献
+        - 质量检查
+        - 修改与版本
+        - 导出成稿
+        - AI 写作协作
+        - 安装与启动（EXE / 脚本）
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: scene
+    attributes:
+      label: 使用场景
+      description: 你在写什么类型的论文、卡在哪一步，为什么现有功能不够用
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 期望的做法
+      description: 你希望点哪里、看到什么结果
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 现在怎么绕过的
+      description: 目前用什么替代方案，或参考了哪个软件的做法
+    validations:
+      required: false
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: 约束确认
+      options:
+        - label: 该功能可以在不联网、不引入第三方前端依赖的前提下实现
+          required: false

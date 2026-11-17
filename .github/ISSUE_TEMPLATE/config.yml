@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使用说明与常见问题
+    url: https://github.com/zane993/paper-lab/blob/main/README.md
+    about: 安装方式、数据备份、AI 配置、已知限制都写在这里，提问前先看一眼。提交前请删除论文正文与个人信息。
