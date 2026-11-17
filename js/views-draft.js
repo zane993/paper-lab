@@ -378,8 +378,13 @@ Views.writing = function (root) {
   const secs = s.outline.sections || [];
   if (!secs.length) {
     root.innerHTML = H.head('模块 04 · 构建', '正文写作', '按章节推进，每节有目标字数、写作要点与实时指标。') +
-      H.empty('还没有章节，无法写作', '先到「提纲与结构」生成章节树。写作模块的目录完全由提纲驱动。',
-        '<button class="btn btn-primary" data-nav="outline">去生成提纲</button>');
+      H.empty('还没有章节，无法写作', '先到「提纲与结构」生成章节树；也可以直接导入现成的 .md / .docx，按标题自动建章节。',
+        '<button class="btn btn-primary" data-nav="outline">去生成提纲</button>' +
+        '<button class="btn" id="btnImportEmpty" style="margin-left:8px">导入 .md / .txt / .docx</button>');
+    const b = root.querySelector('#btnImportEmpty');
+    if (b) b.addEventListener('click', function () {
+      if (typeof Importer === 'object') Importer.pick('.md,.markdown,.txt,.docx');
+    });
     return;
   }
 
