@@ -17,7 +17,9 @@ jobs:
           set -e
           for f in index.html assets/styles.css js/app.js js/core.js js/data.js \
                    js/check.js js/ai.js js/views-setup.js js/views-draft.js \
-                   js/views-final.js js/views-ai.js serve.ps1 install.ps1 uninstall.ps1; do
+                   js/views-final.js js/views-ai.js js/importer.js js/sync.js \
+                   serve.ps1 install.ps1 uninstall.ps1 \
+                   tests/parsers.test.js tests/selftest.html; do
             test -f "$f" || { echo "缺少文件：$f"; exit 1; }
           done
           echo "文件清单 OK"
@@ -38,6 +40,9 @@ jobs:
         run: |
           set -e
           for f in js/*.js; do node --check "$f" && echo "OK $f"; done
+
+      - name: 解析器单测
+        run: node tests/parsers.test.js
 
       - name: PowerShell 语法检查
         shell: pwsh

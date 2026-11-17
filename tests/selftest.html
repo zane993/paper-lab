@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>selftest</title>
+<style>body{font:13px/1.7 Consolas,monospace;padding:16px} .ok{color:#2f7457} .fail{color:#a8443b;font-weight:700}</style>
+</head>
+<body>
+<div id="modalRoot" style="display:none"></div>
+<div id="toastRoot" style="display:none"></div>
+<pre id="out">running…</pre>
+<script src="../js/data.js"></script>
+<script src="../js/core.js"></script>
+<script src="../js/sync.js"></script>
+<script src="../js/views-setup.js"></script>
+<script src="../js/importer.js"></script>
+<script>
+(async function () {
+  const log = [];
+  let pass = 0, fail = 0;
+
+  function ok(name, cond, extra) {
+    if (cond) { pass++; log.push('  ok   ' + name); }
+    else { fail++; log.push('  FAIL ' + name + (extra !== undefined ? '  →  ' + extra : '')); }
+  }
+  function group(t) { log.push(t); }
+
+  const bk = {
+    v1: localStorage.getItem('paperlab.v1'),
+    sync: localStorage.getItem(Sync.KEY),
+    tab: sessionStorage.getItem(Sync.TAB_KEY)
+  };
+
+  try {
+    Store.s = defaultState();
+    Store.dirty = false;
+
+    /* ---------- DOCX 端到端 ---------- */
+    group('DOCX 解析');
+    const buf = await (await fetch('fixtures/sample.docx')).arrayBuffer();
+    const parsed = await Importer.parseDocx(buf);
+    ok('标题样式识别为 3 个', parsed.headings === 3, parsed.headings);
+    ok('未标记 noHeading', parsed.noHeading === false, parsed.noHeading);
+    ok('正文含普通段落', JSON.stringify(parsed.blocks).indexOf('这是绪论的第一段') >= 0);
+    ok('表格单元被抽取', JSON.stringify(parsed.blocks).indexOf('表格单元 A') >= 0);
+    ok('字数大于 0', parsed.words > 0, parsed.words);
+    ok('章标题层级为 1', parsed.blocks[0].level === 1, parsed.blocks[0].level);
+    ok('节标题层级为 2', parsed.blocks[1].level === 2, parsed.blocks[1].level);
+
+    /* ---------- 写入章节 ---------- */
+    group('写入章节');
+    Store.s = defaultState();
+    Store.s.outline.sections = [{ id: 's1', level: 2, title: '1.1 研究背景', target: 0, text: '原有正文。', guide: '' }];
+    Store.s.ui.secId = 's1';
+    const rep = Importer.applyText(parsed, { mode: 'auto', how: 'append' });
+    ok('并入 1 节', rep.merged === 1, rep.merged);
+    ok('新建 2 节', rep.created === 2, rep.created);
+    const s1 = Store.s.outline.sections.filter(function (x) { return x.id === 's1'; })[0];
+    ok('追加不丢原内容', s1.text.indexOf('原有正文') === 0 && s1.text.indexOf('背景段落') > 0, s1.text.slice(0, 40));
+    ok('新章节标题取自文档', Store.s.outline.sections.some(function (x) { return x.title === '第二章 研究方法'; }));
+
+    Store.s.outline.sections = [{ id: 's1', level: 2, title: '研究背景', target: 0, text: '旧内容。', guide: '' }];
+    Store.s.ui.secId = 's1';
+    Importer.applyText(parsed, { mode: 'auto', how: 'replace' });
+    const s1r = Store.s.outline.sections.filter(function (x) { return x.id === 's1'; })[0];
+    ok('覆盖模式替换旧内容', s1r.text.indexOf('旧内容') < 0 && s1r.text.indexOf('背景段落') === 0, s1r.text);
+    ok('表格按行抽取为「单元格 | 单元格」', s1r.text.indexOf('表格单元 A | 表格单元 B') > 0, s1r.text);
+
+    Store.s.outline.sections = [{ id: 's9', level: 1, title: '目标章节', target: 0, text: '开头。', guide: '' }];
+    Store.s.ui.secId = 's9';
+    const rep2 = Importer.applyText(parsed, { mode: 'current', how: 'append' });
+    ok('全部写入当前章节不新建', rep2.created === 0 && rep2.merged === 1, rep2.created + '/' + rep2.merged);
+    ok('当前章节含文档末段', Store.s.outline.sections[0].text.indexOf('方法段落') > 0);
+
+    /* ---------- 文件分发与预览 ---------- */
+    group('文件分发');
+    Importer.initDrop();
+    ok('拖拽遮罩已挂载', !!document.getElementById('dropMask'));
+    ok('重复初始化不重复挂载', (function () { Importer.initDrop(); return document.querySelectorAll('#dropMask').length === 1; })());
+
+    const mdFile = new File(['# 第一章 绪论\n\n导入测试正文。'], 'test.md', { type: 'text/markdown' });
+    await Importer.handleFiles([mdFile]);
+    const modal = document.querySelector('#modalRoot .modal');
+    ok('.md 打开导入预览', !!modal && modal.textContent.indexOf('导入正文') >= 0);
+    ok('预览显示识别字数', !!modal && /识别字数/.test(modal.textContent));
+    PLModal.close();
+
+    const bibFile = new File(['@article{a2020,\n author = {张三 and 李四},\n title = {测试文献},\n journal = {测试期刊},\n year = {2020}\n}'], 'test.bib');
+    await Importer.handleFiles([bibFile]);
+    const modal2 = document.querySelector('#modalRoot .modal');
+    ok('.bib 打开文献预览', !!modal2 && modal2.textContent.indexOf('导入文献') >= 0);
+    ok('文献预览显示解析条目', !!modal2 && /解析条目/.test(modal2.textContent));
+    PLModal.close();
+
+    /* ---------- 同步横幅 ---------- */
+    group('同步横幅');
+    Sync.conflict = { rev: 99, tab: 'other', at: new Date().toISOString() };
+    Sync.showBar();
+    const bar = document.getElementById('syncBar');
+    ok('冲突提示条已渲染', !!bar && /另一标签页保存了修改/.test(bar.textContent));
+    ok('提供两个处置按钮', !!bar && !!bar.querySelector('#sbAdopt') && !!bar.querySelector('#sbKeep'));
+    Sync.hideBar();
+    Sync.conflict = null;
+
+    /* ---------- 同步判定 ---------- */
+    group('多标签同步');
+    Sync.TAB = 'me';
+    Sync.seenRev = 9;
+    localStorage.setItem(Sync.KEY, JSON.stringify({ rev: 10, tab: 'other', at: new Date().toISOString() }));
+    ok('对方版本更新时检测到', !!Sync.remoteAhead());
+    Sync.seenRev = 10;
+    ok('已同步到同版本时不再告警', Sync.remoteAhead() === null);
+    localStorage.setItem(Sync.KEY, JSON.stringify({ rev: 11, tab: 'me', at: new Date().toISOString() }));
+    Sync.seenRev = 10;
+    ok('自己写入的记录不算冲突', Sync.remoteAhead() === null);
+
+    Store.dirty = false; Sync.touched = false; Sync.lastInput = 0; Sync.conflict = null;
+    ok('空闲时可自动采纳', Sync.canAutoAdopt() === true);
+    Sync.touched = true;
+    ok('有本地改动时需人工选择', Sync.canAutoAdopt() === false);
+    Sync.touched = false; Store.dirty = true;
+    ok('未落盘时不自动采纳', Sync.canAutoAdopt() === false);
+
+    Store.dirty = false;
+    Sync.rev = 9; Sync.seenRev = 10;
+    localStorage.setItem(Sync.KEY, JSON.stringify({ rev: 10, tab: 'other', at: new Date().toISOString() }));
+    Sync.commit();
+    const rec = JSON.parse(localStorage.getItem(Sync.KEY));
+    ok('提交后版本号推进到 11', rec.rev === 11 && rec.tab === 'me', JSON.stringify(rec));
+    ok('提交后记录已同步版本', Sync.seenRev === 11, Sync.seenRev);
+    ok('提交后清除本地改动标记', Sync.touched === false);
+  } catch (e) {
+    fail++;
+    log.push('  FAIL 异常：' + (e && e.message ? e.message : e) + '\n' + (e && e.stack ? e.stack : ''));
+  } finally {
+    Store.s = defaultState();
+    Store.dirty = false;
+    if (bk.v1 === null) localStorage.removeItem('paperlab.v1'); else localStorage.setItem('paperlab.v1', bk.v1);
+    if (bk.sync === null) localStorage.removeItem(Sync.KEY); else localStorage.setItem(Sync.KEY, bk.sync);
+    if (bk.tab === null) sessionStorage.removeItem(Sync.TAB_KEY); else sessionStorage.setItem(Sync.TAB_KEY, bk.tab);
+  }
+
+  log.push('');
+  log.push((fail ? 'FAIL' : 'PASS') + ' — 通过 ' + pass + ' 项，失败 ' + fail + ' 项');
+  document.getElementById('out').textContent = log.join('\n');
+  document.title = (fail ? 'FAIL ' : 'PASS ') + pass + '/' + (pass + fail);
+})();
+</script>
+</body>
+</html>

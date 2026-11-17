@@ -970,10 +970,84 @@ table.tbl .t-sub { font-size: 11.5px; color: var(--muted); }
 .ai-quote { display: block; border-left: 3px solid var(--line-strong); padding: 2px 0 2px 10px; margin: 6px 0; color: var(--ink-2); background: var(--surface-2); border-radius: 0 6px 6px 0; }
 @media (max-width: 1180px) { .ai-grid { grid-template-columns: 1fr; } }
 
+/* ------------------------------ 拖拽导入 ------------------------------ */
+
+.drop-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 76, 99, .10);
+}
+
+.drop-mask.on { display: flex; }
+
+.drop-mask::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 2px dashed var(--accent);
+  border-radius: 18px;
+  opacity: .55;
+  pointer-events: none;
+}
+
+.drop-card {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 26px 34px 22px;
+  text-align: center;
+  max-width: 420px;
+}
+
+.drop-ico { font-size: 30px; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+.drop-card h3 { font-size: 15px; margin-bottom: 6px; }
+.drop-card p { margin: 0 0 6px; font-size: 12.3px; color: var(--ink-2); }
+.drop-note { font-size: 11.5px; color: var(--faint); }
+
+/* ------------------------------ 多标签同步横幅 ------------------------------ */
+
+.sync-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translate(-50%, 16px);
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(760px, calc(100vw - 32px));
+  padding: 11px 12px 11px 16px;
+  background: var(--warn-soft);
+  border: 1px solid #e3cea5;
+  border-left: 4px solid var(--warn);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.sync-bar.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.sync-bar .sb-main { font-size: 12.3px; line-height: 1.6; color: #6d4a12; }
+.sync-bar .sb-main b { display: block; font-size: 12.8px; color: #5a3c0d; }
+.sync-bar .sb-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  .sync-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .sync-bar .sb-actions { justify-content: flex-end; }
+}
+
 @media print {
   @page { size: A4; margin: 22mm 18mm; }
   body { background: #fff; font-family: var(--serif); }
-  .appbar, .stepper, .sidebar, .appfoot, .modal-root, .toast-root { display: none !important; }
+  .appbar, .stepper, .sidebar, .appfoot, .modal-root, .toast-root, .drop-mask, .sync-bar { display: none !important; }
   .shell { display: none !important; }
   .print-root { display: block !important; font-size: 12pt; line-height: 1.9; color: #000; }
   .print-root h1 { font-size: 18pt; text-align: center; margin: 0 0 6pt; }

@@ -468,6 +468,7 @@ Views.writing = function (root) {
         }).join('') + '</optgroup>';
       }).join('') + '</select>' +
       '<button class="btn btn-xs" id="btnFig">+ 图表占位</button>' +
+      '<button class="btn btn-xs" id="btnImportText">导入文档</button>' +
       '<div class="sep"></div>' +
       '<button class="btn btn-xs" id="btnCheckSec">本节点体检</button>' +
       '<button class="btn btn-xs" id="btnAiHelp">AI 辅助</button>') +
@@ -604,6 +605,11 @@ Views.writing = function (root) {
   if (btnFig) btnFig.addEventListener('click', function () {
     const n = (nums[curId] || '1') + '-' + (CheckEngine.paras(ta.value).length + 1);
     insertAtCursor(ta, '\n[图 ' + n + ' 图题：请在导出前替换为真实图表说明]\n');
+  });
+
+  const btnImportText = root.querySelector('#btnImportText');
+  if (btnImportText) btnImportText.addEventListener('click', function () {
+    if (typeof Importer === 'object') Importer.pick('.md,.markdown,.txt,.docx');
   });
 
   const btnAi = root.querySelector('#btnAiHelp');

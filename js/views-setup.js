@@ -113,9 +113,10 @@ Views.overview = function (root) {
       '<div class="row tight" style="align-items:center">' +
       '<button class="btn btn-sm" id="btnExportJson">导出项目 JSON</button>' +
       '<button class="btn btn-sm" id="btnImportJson">导入项目 JSON</button>' +
+      '<button class="btn btn-sm" id="btnPickImport">导入文献 / 正文</button>' +
       '<input type="file" id="importFile" accept="application/json,.json" style="display:none">' +
       '</div>' +
-      '<div class="hint" style="margin-top:8px;font-size:11.5px;color:var(--faint)">换电脑或换浏览器时，用 JSON 备份迁移；导入会覆盖当前项目。</div>') +
+      '<div class="hint" style="margin-top:8px;font-size:11.5px;color:var(--faint)">也可以把文件直接拖进窗口：<b>.json</b> 项目、<b>.bib / .ris</b> 文献、<b>.md / .txt / .docx</b> 正文。换电脑或换浏览器时用 JSON 备份迁移；导入会覆盖当前项目。</div>') +
     '</div>' +
 
     '<div>' +
@@ -182,7 +183,7 @@ Views.overview = function (root) {
     }).then(function (ok) {
       if (!ok) return;
       Store.reset();
-      localStorage.setItem(Store.KEY, JSON.stringify(Store.s));
+      Store.flush();
       App.go('overview');
       PLToast.show('已清空', 'ok');
     });
@@ -196,6 +197,10 @@ Views.overview = function (root) {
 
   const fileInput = root.querySelector('#importFile');
   root.querySelector('#btnImportJson').addEventListener('click', function () { fileInput.click(); });
+  const pickImport = root.querySelector('#btnPickImport');
+  if (pickImport) pickImport.addEventListener('click', function () {
+    if (typeof Importer === 'object') Importer.pick();
+  });
   fileInput.addEventListener('change', function () {
     const f = fileInput.files && fileInput.files[0];
     if (!f) return;
@@ -682,7 +687,8 @@ Views.refs = function (root) {
       '资料收集与管理',
       '生成检索式 → 录入/导入文献 → 标注阅读状态与笔记 → 输出可引用的文献 ID。本模块不做全文抓取，也不替代 Zotero 等文献管理工具。',
       '<button class="btn btn-primary" data-ref-add="1">+ 新增文献</button>' +
-      '<button class="btn" id="btnBibImport">BibTeX 导入</button>' +
+      '<button class="btn" id="btnBibImport">BibTeX 粘贴导入</button>' +
+      '<button class="btn" id="btnFileImport">导入文件</button>' +
       '<button class="btn" data-nav="outline">下一步：提纲 →</button>') +
 
     '<div class="grid grid-4" style="margin-bottom:16px">' +
@@ -837,6 +843,11 @@ Views.refs = function (root) {
   root.querySelector('#btnBibExport').addEventListener('click', function () {
     if (!all.length) { PLToast.show('文献库为空', 'warn'); return; }
     U.download('refs-' + U.fmtDate() + '.bib', Refs.exportBib(all), 'application/x-bibtex');
+  });
+
+  const btnFileImport = root.querySelector('#btnFileImport');
+  if (btnFileImport) btnFileImport.addEventListener('click', function () {
+    if (typeof Importer === 'object') Importer.pick('.bib,.ris');
   });
 
   root.querySelector('#btnBibImport').addEventListener('click', function () {

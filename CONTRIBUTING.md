@@ -26,13 +26,18 @@
 ## 本地自测清单
 
 ```powershell
-# 静态检查（与 CI 一致）
+# 静态检查与解析器单测（与 CI 一致）
 node --check js/app.js
+node tests/parsers.test.js
 powershell -NoProfile -ExecutionPolicy Bypass -File .\serve.ps1 -Open
 ```
 
-- [ ] 首页能打开，`v0.2.0` 版本号正确显示
+浏览器内自测页：打开 `http://127.0.0.1:8777/tests/selftest.html`，页面应显示 `PASS — 通过 32 项，失败 0 项`。
+
+- [ ] 首页能打开，`v0.3.0` 版本号正确显示
 - [ ] 新建项目 → 选题 → 提纲 → 写一章 → 质量检查 → 导出，全流程可走通
 - [ ] 刷新页面后数据仍在（`localStorage` 未丢失）
 - [ ] 导入一份旧版项目 JSON 不报错
+- [ ] 拖入 `.md` / `.docx` / `.bib` 均能弹出预览并按预期写入
+- [ ] 同一浏览器开两个标签页改同一项目，不会静默覆盖（会出提示条）
 - [ ] `install.ps1` 与 `uninstall.ps1` 无脚本错误（可加 `-NoLaunch -NoShortcuts` 试跑）

@@ -251,6 +251,7 @@ const Store = {
 
   save: function () {
     Store.dirty = true;
+    if (typeof Sync === 'object') Sync.touch();
     setSaveState('dirty', '正在保存…');
     clearTimeout(Store.timer);
     Store.timer = setTimeout(function () { Store.flush(); }, 500);
@@ -258,12 +259,18 @@ const Store = {
 
   flush: function () {
     clearTimeout(Store.timer);
+    if (typeof Sync === 'object' && Sync.enabled) {
+      if (Sync.conflict) { setSaveState('warn', '待处理同步冲突'); return; }
+      const ahead = Sync.remoteAhead();
+      if (ahead) { Sync.raise(ahead); return; }
+    }
     try {
       Store.s.meta.updatedAt = new Date().toISOString();
       localStorage.setItem(Store.KEY, JSON.stringify(Store.s));
       Store.dirty = false;
       Store.failed = false;
       setSaveState('', '已保存');
+      if (typeof Sync === 'object') Sync.commit();
     } catch (e) {
       Store.failed = true;
       setSaveState('error', '本机存储不可用');

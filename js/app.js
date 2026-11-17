@@ -90,6 +90,8 @@ document.getElementById('btnHelp').addEventListener('click', function () {
       '<div class="section-title">数据与边界</div>' +
       '<div style="font-size:12.3px;color:var(--muted);line-height:1.9">' +
       '<p>项目数据保存在本机浏览器的 localStorage（键 <code>paperlab.v1</code>），刷新、关浏览器都不会丢失；换设备请用「项目总览 → 导出项目 JSON」迁移。</p>' +
+      '<p>把文件拖到窗口任意位置即可导入：文献 <code>.bib / .ris</code>、正文 <code>.md / .txt / .docx</code>、项目 <code>.json</code>。解析全部在本机完成。</p>' +
+      '<p>同一浏览器开多个标签页时，本程序会同步改动；若两页都有未保存的编辑，会提示你选择保留哪一份，不会静默覆盖。</p>' +
       '<p>质量检查是规则引擎：不联网、不调用大模型、不做正式查重。它给的是"可解释的修改线索"，不是评审结论。</p>' +
       '</div>',
     footer: '<button class="btn btn-primary" data-close="1">知道了</button>'
@@ -99,9 +101,11 @@ document.getElementById('btnHelp').addEventListener('click', function () {
 /* ---------------- 启动 ---------------- */
 (function boot() {
   Store.load();
+  if (typeof Sync === 'object') Sync.init();
   const hashView = (location.hash || '').replace(/^#/, '');
   if (hashView && Views[hashView]) Store.s.ui.view = hashView;
   App.render();
+  if (typeof Importer === 'object') Importer.initDrop();
 
   const s = Store.s;
   if (!s.meta.title && !(s.topic.candidates || []).length) {
