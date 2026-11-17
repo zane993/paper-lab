@@ -6,6 +6,9 @@
 - **不需要联网**（除你自己配置的 AI 接口），不上传任何内容
 - 数据保存在本机浏览器 `localStorage`，可随时导出 JSON 备份
 
+> 不想看文档、只想用：直接下载 [Releases](https://github.com/zane993/paper-lab/releases) 里的 zip，解压后双击 `善驮论文工坊.exe`。
+> 遇到问题或有想法，去 [Issues](https://github.com/zane993/paper-lab/issues/new/choose) 提，模板会引导你写清环境与复现步骤。
+
 ---
 
 ## 一、文件清单
