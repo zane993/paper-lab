@@ -12,6 +12,12 @@ dist/
 *.token
 paperlab.aikey*
 
+# 论文项目导出与备份：含正文，提交到公开仓库等于发表
+*-项目.json
+*项目导出*.json
+*导出*.json
+!package.json
+
 # 编辑器
 .vscode/
 .idea/
