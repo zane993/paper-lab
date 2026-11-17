@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 必需文件齐全
+        run: |
+          set -e
+          for f in index.html assets/styles.css js/app.js js/core.js js/data.js \
+                   js/check.js js/ai.js js/views-setup.js js/views-draft.js \
+                   js/views-final.js js/views-ai.js serve.ps1 install.ps1 uninstall.ps1; do
+            test -f "$f" || { echo "缺少文件：$f"; exit 1; }
+          done
+          echo "文件清单 OK"
+
+      - name: 页面引用的资源都存在
+        run: |
+          set -e
+          for ref in $(grep -oE '(src|href)="[^"]+"' index.html | sed -E 's/.*="([^"]+)"/\1/' | grep -vE '^(https?:|#|mailto:)' || true); do
+            test -f "$ref" || { echo "引用不存在：$ref"; exit 1; }
+          done
+          echo "资源引用 OK"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: JS 语法检查
+        run: |
+          set -e
+          for f in js/*.js; do node --check "$f" && echo "OK $f"; done
+
+      - name: PowerShell 语法检查
+        shell: pwsh
+        run: |
+          $fail = $false
+          foreach ($f in @('serve.ps1', 'install.ps1', 'uninstall.ps1')) {
+            $errs = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f).Path, [ref]$null, [ref]$errs)
+            if ($errs.Count -gt 0) {
+              $fail = $true
+              Write-Host "语法错误 $f"
+              $errs | ForEach-Object { Write-Host ("  " + $_.Extent.StartLineNumber + ": " + $_.Message) }
+            } else {
+              Write-Host "OK $f"
+            }
+          }
+          if ($fail) { exit 1 }
